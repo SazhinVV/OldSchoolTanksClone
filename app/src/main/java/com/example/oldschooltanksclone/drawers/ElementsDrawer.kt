@@ -3,18 +3,11 @@ package com.example.oldschooltanksclone.drawers
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
-import androidx.annotation.DrawableRes
 import com.example.oldschooltanksclone.CELL_SIZE
-import com.example.oldschooltanksclone.R
 import com.example.oldschooltanksclone.classes.enums.Material
 import com.example.oldschooltanksclone.classes.models.Coordinate
 import com.example.oldschooltanksclone.classes.models.Element
 import com.example.oldschooltanksclone.utils.getElementByCoordinate
-
-const val CELLS_SIMPLE_ELEMENT = 1
-const val CELLS_EAGLE_WIDTH = 4
-const val CELLS_EAGLE_HEIGHT = 3
-
 
 class ElementsDrawer(val container: FrameLayout) {
 
@@ -34,13 +27,13 @@ class ElementsDrawer(val container: FrameLayout) {
 
     private fun replaceView(coordinate: Coordinate){
         eraseView(coordinate)
-        selectMaterial(coordinate)
+        drawView(coordinate)
     }
 
     private fun drawOrReplace(coordinate: Coordinate){
         val viewOnCoordinate = getElementByCoordinate(coordinate, elementsOnContainer)
         if (viewOnCoordinate == null) {
-            selectMaterial(coordinate)
+            drawView(coordinate)
             return
         }
         if (currentMaterial != viewOnCoordinate.material){
@@ -54,55 +47,67 @@ class ElementsDrawer(val container: FrameLayout) {
         }
         for (element in elemets){
             currentMaterial = element.material
-            selectMaterial(element.coordinate)
+            drawView(element.coordinate)
         }
     }
 
-    private fun selectMaterial(coordinate: Coordinate){
-
-        when (currentMaterial){
-            Material.BRICK -> drawView(R.drawable.brick, coordinate)
-            Material.GRASS -> drawView(R.drawable.grass, coordinate)
-            Material.CONCRETE -> drawView(R.drawable.concrete, coordinate)
-            Material.EAGLE -> {
-                removeExistingEagle()
-                drawView(R.drawable.eagle, coordinate, CELLS_EAGLE_WIDTH , CELLS_EAGLE_HEIGHT)
+    private fun removeUnwantedInstance(){
+        if (currentMaterial.elementsAmountOnScreen != 0){
+            val erasingElements = elementsOnContainer.filter { it.material == currentMaterial }
+            if (erasingElements.size >= currentMaterial.elementsAmountOnScreen){
+                eraseView(erasingElements[0].coordinate)
             }
-            Material.EMPTY -> {}
-        }
-
-    }
-
-    private fun removeExistingEagle(){
-        elementsOnContainer.firstOrNull { it.material == Material.EAGLE }?.coordinate?.let {
-            eraseView(it)
         }
     }
 
     private fun eraseView(coordinate: Coordinate){
-        val elementOnCoordinate = getElementByCoordinate(coordinate, elementsOnContainer)
-        if (elementOnCoordinate != null) {
-            val erasingView = container.findViewById<View>(elementOnCoordinate.viewId)
-            container.removeView(erasingView)
-            elementsOnContainer.remove(elementOnCoordinate)
+        removeElement(getElementByCoordinate(coordinate, elementsOnContainer))
+        for (element in getElementsUnderCurrentCoordinate(coordinate)){
+            removeElement(element)
         }
     }
 
-    private fun drawView(
-        @DrawableRes image: Int,
-        coordinate: Coordinate,
-        width: Int = CELLS_SIMPLE_ELEMENT ,
-        height: Int = CELLS_SIMPLE_ELEMENT){
+    private fun removeElement(element: Element?){
+        if (element != null){
+            val erasingView = container.findViewById<View>(element.viewId)
+            container.removeView(erasingView)
+            elementsOnContainer.remove(element)
+        }
+    }
+
+    private fun getElementsUnderCurrentCoordinate(coordinate: Coordinate): List<Element>{
+        val elements = mutableListOf<Element>()
+            for (element in elementsOnContainer){
+                for (height in 0 until  currentMaterial.height){
+                    for (width in 0 until currentMaterial.width){
+                        if (element.coordinate == Coordinate(
+                                coordinate.top + height * CELL_SIZE,
+                                coordinate.left + width * CELL_SIZE)){
+                            elements.add(element)
+                        }
+                    }
+                }
+            }
+        return elements
+    }
+
+    private fun drawView(coordinate: Coordinate){
+        removeUnwantedInstance()
         val view = ImageView(container.context)
-        val layoutParams = FrameLayout.LayoutParams(width * CELL_SIZE, height * CELL_SIZE)
-        view.setImageResource(image)
+        val layoutParams = FrameLayout.LayoutParams(currentMaterial.width * CELL_SIZE, currentMaterial.height * CELL_SIZE)
+        view.setImageResource(currentMaterial.image)
         layoutParams.topMargin = coordinate.top
         layoutParams.leftMargin = coordinate.left
-        val viewId = View.generateViewId()
-        view.id = viewId
+        val element = Element(
+            material = currentMaterial,
+            coordinate = coordinate,
+            width = currentMaterial.width,
+            height = currentMaterial.height)
+        view.id = element.viewId
         view.layoutParams = layoutParams
+        view.scaleType = ImageView.ScaleType.FIT_XY
         container.addView(view)
-        elementsOnContainer.add(Element(viewId, currentMaterial, coordinate, width, height))
+        elementsOnContainer.add(element)
     }
 
 
