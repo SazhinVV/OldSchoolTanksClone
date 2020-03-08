@@ -12,15 +12,12 @@ import android.widget.FrameLayout
 import com.example.oldschooltanksclone.classes.LevelStorage
 import com.example.oldschooltanksclone.classes.enums.Direction.*
 import com.example.oldschooltanksclone.classes.enums.Material
-import com.example.oldschooltanksclone.drawers.BulletDrawer
-import com.example.oldschooltanksclone.drawers.ElementsDrawer
-import com.example.oldschooltanksclone.drawers.GridDrawer
-import com.example.oldschooltanksclone.drawers.TankDrawer
+import com.example.oldschooltanksclone.drawers.*
 import kotlinx.android.synthetic.main.activity_main.*
 
 const val CELL_SIZE = 50
-const val VERTICAL_CELL_AMOUNT = 25
-const val HORIZONTAL_CELL_AMOUNT = 33
+const val VERTICAL_CELL_AMOUNT = 26
+const val HORIZONTAL_CELL_AMOUNT = 34
 const val VERTICAL_MAX_SIZE = CELL_SIZE * VERTICAL_CELL_AMOUNT
 const val HORIZONTAL_MAX_SIZE = CELL_SIZE * HORIZONTAL_CELL_AMOUNT
 
@@ -28,6 +25,9 @@ const val HORIZONTAL_MAX_SIZE = CELL_SIZE * HORIZONTAL_CELL_AMOUNT
 
 class MainActivity : AppCompatActivity() {
     private var editMode = false
+    private val enemyDrawer by lazy{
+        EnemyDrawer(container)
+    }
 
     private val gridDrawer by lazy{
         GridDrawer(container)
@@ -58,13 +58,12 @@ class MainActivity : AppCompatActivity() {
         editor_grass.setOnClickListener{ elementsDrawer.currentMaterial = Material.GRASS }
         editor_concrete.setOnClickListener{ elementsDrawer.currentMaterial = Material.CONCRETE }
         editor_eagle.setOnClickListener { elementsDrawer.currentMaterial = Material.EAGLE }
-        editor_enemy_respawn.setOnClickListener { elementsDrawer.currentMaterial = Material.ENEMY_TANK_RESPAWN }
-        editor_player_respawn.setOnClickListener { elementsDrawer.currentMaterial = Material.PLAYER_TANK_RESPAWN }
         container.setOnTouchListener { _, event ->
             elementsDrawer.onTouchContainer(event.x, event.y)
             return@setOnTouchListener true
         }
         elementsDrawer.drawElementsList(levelStorage.loadLevel())
+        hideSettings()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -82,19 +81,38 @@ class MainActivity : AppCompatActivity() {
             R.id.menu_save -> {
                 levelStorage.saveLevel(elementsDrawer.elementsOnContainer)
                 return true
+            }
+            R.id.menu_play_game -> {
+                startTheGame()
+                return true
             }else -> super.onOptionsItemSelected(item)
         }
     }
 
-    private fun switchEditMode(){
+    private fun startTheGame() {
         if (editMode) {
-            gridDrawer.removeGrid()
-            materials_container.visibility = GONE
-        }else{
-            gridDrawer.drawGrid()
-            materials_container.visibility = VISIBLE
+            return
         }
+        enemyDrawer.startEnemyDrawing(elementsDrawer.elementsOnContainer)
+    }
+
+    private fun switchEditMode(){
         editMode = !editMode
+        if (editMode) {
+            hideSettings()
+        }else{
+            showSettings()
+        }
+    }
+
+    private fun showSettings(){
+        gridDrawer.drawGrid()
+        materials_container.visibility = VISIBLE
+    }
+
+    private fun hideSettings(){
+        gridDrawer.removeGrid()
+        materials_container.visibility = GONE
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {

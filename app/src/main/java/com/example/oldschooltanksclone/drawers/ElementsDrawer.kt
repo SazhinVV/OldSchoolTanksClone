@@ -7,6 +7,7 @@ import com.example.oldschooltanksclone.CELL_SIZE
 import com.example.oldschooltanksclone.classes.enums.Material
 import com.example.oldschooltanksclone.classes.models.Coordinate
 import com.example.oldschooltanksclone.classes.models.Element
+import com.example.oldschooltanksclone.utils.drawElement
 import com.example.oldschooltanksclone.utils.getElementByCoordinate
 
 class ElementsDrawer(val container: FrameLayout) {
@@ -93,22 +94,12 @@ class ElementsDrawer(val container: FrameLayout) {
 
     private fun drawView(coordinate: Coordinate){
         removeUnwantedInstance()
-        val view = ImageView(container.context)
-        val layoutParams = FrameLayout.LayoutParams(currentMaterial.width * CELL_SIZE, currentMaterial.height * CELL_SIZE)
-        view.setImageResource(currentMaterial.image)
-        layoutParams.topMargin = coordinate.top
-        layoutParams.leftMargin = coordinate.left
         val element = Element(
             material = currentMaterial,
             coordinate = coordinate,
             width = currentMaterial.width,
             height = currentMaterial.height)
-        view.id = element.viewId
-        view.layoutParams = layoutParams
-        view.scaleType = ImageView.ScaleType.FIT_XY
-        container.addView(view)
+        element.drawElement(container)
         elementsOnContainer.add(element)
     }
-
-
 }
