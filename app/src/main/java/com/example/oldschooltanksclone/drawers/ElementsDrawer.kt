@@ -2,7 +2,6 @@ package com.example.oldschooltanksclone.drawers
 
 import android.view.View
 import android.widget.FrameLayout
-import android.widget.ImageView
 import com.example.oldschooltanksclone.CELL_SIZE
 import com.example.oldschooltanksclone.classes.enums.Material
 import com.example.oldschooltanksclone.classes.models.Coordinate
@@ -28,13 +27,13 @@ class ElementsDrawer(val container: FrameLayout) {
 
     private fun replaceView(coordinate: Coordinate){
         eraseView(coordinate)
-        drawView(coordinate)
+        createElementDrawView(coordinate)
     }
 
     private fun drawOrReplace(coordinate: Coordinate){
         val viewOnCoordinate = getElementByCoordinate(coordinate, elementsOnContainer)
         if (viewOnCoordinate == null) {
-            drawView(coordinate)
+            createElementDrawView(coordinate)
             return
         }
         if (currentMaterial != viewOnCoordinate.material){
@@ -48,8 +47,9 @@ class ElementsDrawer(val container: FrameLayout) {
         }
         for (element in elemets){
             currentMaterial = element.material
-            drawView(element.coordinate)
+            drawElement(element)
         }
+        currentMaterial = Material.EMPTY
     }
 
     private fun removeUnwantedInstance(){
@@ -92,14 +92,16 @@ class ElementsDrawer(val container: FrameLayout) {
         return elements
     }
 
-    private fun drawView(coordinate: Coordinate){
+    private fun drawElement(element: Element){
         removeUnwantedInstance()
-        val element = Element(
-            material = currentMaterial,
-            coordinate = coordinate,
-            width = currentMaterial.width,
-            height = currentMaterial.height)
         element.drawElement(container)
         elementsOnContainer.add(element)
+    }
+
+    private fun createElementDrawView(coordinate: Coordinate){
+        val element = Element(
+            material = currentMaterial,
+            coordinate = coordinate)
+            drawElement(element)
     }
 }

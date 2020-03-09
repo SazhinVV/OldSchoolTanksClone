@@ -10,8 +10,12 @@ import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.widget.FrameLayout
 import com.example.oldschooltanksclone.classes.LevelStorage
+import com.example.oldschooltanksclone.classes.enums.Direction
 import com.example.oldschooltanksclone.classes.enums.Direction.*
 import com.example.oldschooltanksclone.classes.enums.Material
+import com.example.oldschooltanksclone.classes.models.Coordinate
+import com.example.oldschooltanksclone.classes.models.Element
+import com.example.oldschooltanksclone.classes.models.Tank
 import com.example.oldschooltanksclone.drawers.*
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -19,33 +23,51 @@ const val CELL_SIZE = 50
 const val VERTICAL_CELL_AMOUNT = 26
 const val HORIZONTAL_CELL_AMOUNT = 34
 const val VERTICAL_MAX_SIZE = CELL_SIZE * VERTICAL_CELL_AMOUNT
+const val HALF_WIDTH_OF_CONTAINER = VERTICAL_MAX_SIZE / 2
 const val HORIZONTAL_MAX_SIZE = CELL_SIZE * HORIZONTAL_CELL_AMOUNT
-
 
 
 class MainActivity : AppCompatActivity() {
     private var editMode = false
-    private val enemyDrawer by lazy{
-        EnemyDrawer(container)
+
+    private val playerTank by lazy {
+        Tank(
+            Element(
+                material = Material.PLAYER_TANK,
+                coordinate = getPlayerTankCoordinate()
+            ), UP, BulletDrawer(container)
+        )
     }
 
-    private val gridDrawer by lazy{
+    private fun getPlayerTankCoordinate() = Coordinate(
+        top = HORIZONTAL_MAX_SIZE - Material.PLAYER_TANK.height * CELL_SIZE,
+        left = HALF_WIDTH_OF_CONTAINER - 6 * CELL_SIZE
+    )
+
+    private val eagle = Element(
+            material = Material.EAGLE,
+            coordinate = getEagleCoordinate()
+        )
+
+    private fun getEagleCoordinate() = Coordinate(
+        top = HORIZONTAL_MAX_SIZE - Material.EAGLE.height * CELL_SIZE,
+        left = HALF_WIDTH_OF_CONTAINER - Material.EAGLE.width * CELL_SIZE / 2
+    )
+
+
+    private val enemyDrawer by lazy {
+        EnemyDrawer(container, elementsDrawer.elementsOnContainer)
+    }
+
+    private val gridDrawer by lazy {
         GridDrawer(container)
     }
 
-    private  val elementsDrawer by lazy{
+    private val elementsDrawer by lazy {
         ElementsDrawer(container)
     }
 
-    private val tankDrawer by lazy {
-        TankDrawer(container)
-    }
-
-    private val bulletDraw by lazy {
-        BulletDrawer(container)
-    }
-
-    private val levelStorage by lazy{
+    private val levelStorage by lazy {
         LevelStorage(this)
     }
 
@@ -53,16 +75,19 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         container.layoutParams = FrameLayout.LayoutParams(VERTICAL_MAX_SIZE, HORIZONTAL_MAX_SIZE)
-        editor_clear.setOnClickListener{ elementsDrawer.currentMaterial = Material.EMPTY }
-        editor_brick.setOnClickListener{ elementsDrawer.currentMaterial = Material.BRICK }
-        editor_grass.setOnClickListener{ elementsDrawer.currentMaterial = Material.GRASS }
-        editor_concrete.setOnClickListener{ elementsDrawer.currentMaterial = Material.CONCRETE }
-        editor_eagle.setOnClickListener { elementsDrawer.currentMaterial = Material.EAGLE }
+        editor_clear.setOnClickListener { elementsDrawer.currentMaterial = Material.EMPTY }
+        editor_brick.setOnClickListener { elementsDrawer.currentMaterial = Material.BRICK }
+        editor_grass.setOnClickListener { elementsDrawer.currentMaterial = Material.GRASS }
+        editor_concrete.setOnClickListener { elementsDrawer.currentMaterial = Material.CONCRETE }
         container.setOnTouchListener { _, event ->
+            if (!editMode){
+                return@setOnTouchListener true
+            }
             elementsDrawer.onTouchContainer(event.x, event.y)
             return@setOnTouchListener true
         }
         elementsDrawer.drawElementsList(levelStorage.loadLevel())
+        elementsDrawer.drawElementsList(listOf(playerTank.element, eagle))
         hideSettings()
     }
 
@@ -72,7 +97,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId){
+        return when (item.itemId) {
             R.id.menu_settings -> {
                 gridDrawer.drawGrid()
                 switchEditMode()
@@ -85,7 +110,8 @@ class MainActivity : AppCompatActivity() {
             R.id.menu_play_game -> {
                 startTheGame()
                 return true
-            }else -> super.onOptionsItemSelected(item)
+            }
+            else -> super.onOptionsItemSelected(item)
         }
     }
 
@@ -93,39 +119,44 @@ class MainActivity : AppCompatActivity() {
         if (editMode) {
             return
         }
-        enemyDrawer.startEnemyDrawing(elementsDrawer.elementsOnContainer)
+        enemyDrawer.startEnemyCreation()
+        enemyDrawer.moveEnemyTanks()
     }
 
-    private fun switchEditMode(){
+    private fun switchEditMode() {
         editMode = !editMode
         if (editMode) {
             hideSettings()
-        }else{
+        } else {
             showSettings()
         }
     }
 
-    private fun showSettings(){
+    private fun showSettings() {
         gridDrawer.drawGrid()
         materials_container.visibility = VISIBLE
     }
 
-    private fun hideSettings(){
+    private fun hideSettings() {
         gridDrawer.removeGrid()
         materials_container.visibility = GONE
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        when(keyCode){
-            KEYCODE_DPAD_UP -> tankDrawer.move(my_tank, UP, elementsDrawer.elementsOnContainer)
-            KEYCODE_DPAD_DOWN -> tankDrawer.move(my_tank, DOWN, elementsDrawer.elementsOnContainer)
-            KEYCODE_DPAD_LEFT -> tankDrawer.move(my_tank, LEFT, elementsDrawer.elementsOnContainer)
-            KEYCODE_DPAD_RIGHT -> tankDrawer.move(my_tank, RIGHT, elementsDrawer.elementsOnContainer)
-            KEYCODE_SPACE -> bulletDraw.makeBulletMove(my_tank, tankDrawer.currentDirection, elementsDrawer.elementsOnContainer)
+        when (keyCode) {
+            KEYCODE_DPAD_UP -> move(UP)
+            KEYCODE_DPAD_DOWN -> move(DOWN)
+            KEYCODE_DPAD_LEFT -> move(LEFT)
+            KEYCODE_DPAD_RIGHT -> move(RIGHT)
+            KEYCODE_SPACE -> playerTank.bulletDrawer.makeBulletMove(
+                playerTank, elementsDrawer.elementsOnContainer
+            )
 
         }
         return super.onKeyDown(keyCode, event)
     }
 
-
+    private fun move(direction: Direction) {
+        playerTank.move(direction, container, elementsDrawer.elementsOnContainer)
+    }
 }

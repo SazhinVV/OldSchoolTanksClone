@@ -8,15 +8,7 @@
 <FrameLayout
     android:id="@+id/container"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-    <androidx.appcompat.widget.AppCompatImageView
-        android:id="@+id/my_tank"
-        android:layout_width="@dimen/cell_size"
-        android:layout_height="@dimen/cell_size"
-        android:src="@drawable/tank" />
-
-</FrameLayout>
+    android:layout_height="match_parent"/>
 
     <LinearLayout
         android:id="@+id/materials_container"
@@ -55,13 +47,6 @@
             android:layout_height="@dimen/cell_size"
             android:layout_margin="8dp"
             android:src="@drawable/grass" />
-
-        <ImageView
-            android:id="@+id/editor_eagle"
-            android:layout_width="@dimen/cell_size"
-            android:layout_height="@dimen/cell_size"
-            android:layout_margin="8dp"
-            android:src="@drawable/eagle" />
 
     </LinearLayout>
 
