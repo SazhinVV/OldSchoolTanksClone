@@ -23,27 +23,26 @@ const val CELL_SIZE = 50
 const val VERTICAL_CELL_AMOUNT = 26
 const val HORIZONTAL_CELL_AMOUNT = 34
 const val VERTICAL_MAX_SIZE = CELL_SIZE * VERTICAL_CELL_AMOUNT
-const val HALF_WIDTH_OF_CONTAINER = VERTICAL_MAX_SIZE / 2
 const val HORIZONTAL_MAX_SIZE = CELL_SIZE * HORIZONTAL_CELL_AMOUNT
-
+const val HALF_WIDTH_OF_CONTAINER = VERTICAL_MAX_SIZE / 2
 
 class MainActivity : AppCompatActivity() {
     private var editMode = false
-
-    private val bulletDrawer by lazy{
-        BulletDrawer(
-            container,
-            elementsDrawer.elementsOnContainer,
-            enemyDrawer
-        )
-    }
-
     private val playerTank by lazy {
         Tank(
             Element(
                 material = Material.PLAYER_TANK,
                 coordinate = getPlayerTankCoordinate()
-            ), UP, enemyDrawer)
+            ), UP, enemyDrawer
+        )
+    }
+
+    private val bulletDrawer by lazy {
+        BulletDrawer(
+            container,
+            elementsDrawer.elementsOnContainer,
+            enemyDrawer
+        )
     }
 
     private fun getPlayerTankCoordinate() = Coordinate(
@@ -52,19 +51,15 @@ class MainActivity : AppCompatActivity() {
     )
 
     private val eagle = Element(
-            material = Material.EAGLE,
-            coordinate = getEagleCoordinate()
-        )
+        material = Material.EAGLE,
+        coordinate = getEagleCoordinate()
+    )
+
 
     private fun getEagleCoordinate() = Coordinate(
         top = HORIZONTAL_MAX_SIZE - Material.EAGLE.height * CELL_SIZE,
         left = HALF_WIDTH_OF_CONTAINER - Material.EAGLE.width * CELL_SIZE / 2
     )
-
-
-    private val enemyDrawer by lazy {
-        EnemyDrawer(container, elementsDrawer.elementsOnContainer)
-    }
 
     private val gridDrawer by lazy {
         GridDrawer(container)
@@ -78,6 +73,10 @@ class MainActivity : AppCompatActivity() {
         LevelStorage(this)
     }
 
+    private val enemyDrawer by lazy {
+        EnemyDrawer(container, elementsDrawer.elementsOnContainer)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -85,10 +84,10 @@ class MainActivity : AppCompatActivity() {
         container.layoutParams = FrameLayout.LayoutParams(VERTICAL_MAX_SIZE, HORIZONTAL_MAX_SIZE)
         editor_clear.setOnClickListener { elementsDrawer.currentMaterial = Material.EMPTY }
         editor_brick.setOnClickListener { elementsDrawer.currentMaterial = Material.BRICK }
-        editor_grass.setOnClickListener { elementsDrawer.currentMaterial = Material.GRASS }
         editor_concrete.setOnClickListener { elementsDrawer.currentMaterial = Material.CONCRETE }
+        editor_grass.setOnClickListener { elementsDrawer.currentMaterial = Material.GRASS }
         container.setOnTouchListener { _, event ->
-            if (!editMode){
+            if (!editMode) {
                 return@setOnTouchListener true
             }
             elementsDrawer.onTouchContainer(event.x, event.y)
@@ -107,17 +106,16 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.menu_settings -> {
-                gridDrawer.drawGrid()
                 switchEditMode()
-                return true
+                true
             }
             R.id.menu_save -> {
                 levelStorage.saveLevel(elementsDrawer.elementsOnContainer)
-                return true
+                true
             }
             R.id.menu_play_game -> {
                 startTheGame()
-                return true
+                true
             }
             else -> super.onOptionsItemSelected(item)
         }
@@ -153,8 +151,8 @@ class MainActivity : AppCompatActivity() {
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         when (keyCode) {
             KEYCODE_DPAD_UP -> move(UP)
-            KEYCODE_DPAD_DOWN -> move(DOWN)
             KEYCODE_DPAD_LEFT -> move(LEFT)
+            KEYCODE_DPAD_DOWN -> move(DOWN)
             KEYCODE_DPAD_RIGHT -> move(RIGHT)
             KEYCODE_SPACE -> bulletDrawer.addNewBulletForTank(playerTank)
         }

@@ -7,7 +7,7 @@ import com.example.oldschooltanksclone.classes.enums.Material
 import com.example.oldschooltanksclone.classes.models.Coordinate
 import com.example.oldschooltanksclone.classes.models.Element
 import com.example.oldschooltanksclone.utils.drawElement
-import com.example.oldschooltanksclone.utils.getElementByCoordinate
+import com.example.oldschooltanksclone.utils.getElementByCoordinates
 
 class ElementsDrawer(val container: FrameLayout) {
 
@@ -31,7 +31,7 @@ class ElementsDrawer(val container: FrameLayout) {
     }
 
     private fun drawOrReplace(coordinate: Coordinate){
-        val viewOnCoordinate = getElementByCoordinate(coordinate, elementsOnContainer)
+        val viewOnCoordinate = getElementByCoordinates(coordinate, elementsOnContainer)
         if (viewOnCoordinate == null) {
             createElementDrawView(coordinate)
             return
@@ -62,7 +62,7 @@ class ElementsDrawer(val container: FrameLayout) {
     }
 
     private fun eraseView(coordinate: Coordinate){
-        removeElement(getElementByCoordinate(coordinate, elementsOnContainer))
+        removeElement(getElementByCoordinates(coordinate, elementsOnContainer))
         for (element in getElementsUnderCurrentCoordinate(coordinate)){
             removeElement(element)
         }
