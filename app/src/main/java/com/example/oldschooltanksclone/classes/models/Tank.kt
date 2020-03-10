@@ -6,9 +6,7 @@ import com.example.oldschooltanksclone.CELL_SIZE
 import com.example.oldschooltanksclone.classes.enums.Direction
 import com.example.oldschooltanksclone.classes.enums.Material
 import com.example.oldschooltanksclone.drawers.BulletDrawer
-import com.example.oldschooltanksclone.utils.checkViewCanMoveThroughBorder
-import com.example.oldschooltanksclone.utils.getElementByCoordinate
-import com.example.oldschooltanksclone.utils.runOnUiThread
+import com.example.oldschooltanksclone.utils.*
 import kotlin.random.Random
 
 class Tank constructor(
@@ -37,6 +35,15 @@ class Tank constructor(
             changeDirectionForEnemyTank()
         }
 
+    }
+
+    private fun generateRandomDirectionForEnemyTank(){
+        if (element.material != Material.ENEMY_TANK){
+            return
+        }
+        if (checkIfChanceBiggerThanRandom(10)){
+            changeDirectionForEnemyTank()
+        }
     }
 
     private fun changeDirectionForEnemyTank(){
@@ -98,7 +105,10 @@ class Tank constructor(
         coordinate: Coordinate,
         elementsOnContainer: List<Element>): Boolean {
         for (anyCoordinate in getTankCoordinates(coordinate)) {
-            val element = getElementByCoordinate(anyCoordinate, elementsOnContainer)
+            var element = getElementByCoordinate(anyCoordinate, elementsOnContainer)
+            if (element == null){
+                element = getTankByCoordinate(anyCoordinate, bulletDrawer.enemyDrawer.tanks)
+            }
             if (element != null && !element.material.tankCanGoThrough) {
                 if (this == element){
                     continue

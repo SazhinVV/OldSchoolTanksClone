@@ -13,12 +13,15 @@ import com.example.oldschooltanksclone.classes.models.Element
 import com.example.oldschooltanksclone.classes.models.Tank
 import com.example.oldschooltanksclone.utils.checkViewCanMoveThroughBorder
 import com.example.oldschooltanksclone.utils.getElementByCoordinate
+import com.example.oldschooltanksclone.utils.getTankByCoordinate
 import com.example.oldschooltanksclone.utils.runOnUiThread
 
 private const val BULLET_WIDTH = 15
 private const val BULLET_HEIGHT = 25
 
-class BulletDrawer (private val container: FrameLayout){
+class BulletDrawer (private val container: FrameLayout,
+                    private val elements: MutableList<Element>,
+                    val enemyDrawer: EnemyDrawer){
 
     private var canBulletGoGurther = true
     private var bulletThread: Thread? = null
@@ -26,7 +29,7 @@ class BulletDrawer (private val container: FrameLayout){
 
     private fun checkBulletThreadAlive() = bulletThread != null && bulletThread!!.isAlive
 
-    fun makeBulletMove(tank: Tank, elementsOnContainer: MutableList<Element>){
+    fun makeBulletMove(tank: Tank){
         canBulletGoGurther = true
         this.tank = tank
         val currentDirection = tank.direction
@@ -51,7 +54,6 @@ class BulletDrawer (private val container: FrameLayout){
                     }
                     Thread.sleep(50)
                     chooseBehaviorInTermsOfDirections(
-                        elementsOnContainer,
                         currentDirection,
                         Coordinate(
                             (bullet.layoutParams as FrameLayout.LayoutParams).topMargin,
@@ -131,7 +133,7 @@ class BulletDrawer (private val container: FrameLayout){
         )
     }
 
-    private fun removeElementAndStopBullet(element: Element?, elementsOnContainer: MutableList<Element>){
+    private fun removeElementAndStopBullet(element: Element?){
         if (element != null){
             if (element.material.bulletCanGoThrough){
                 return
@@ -143,11 +145,18 @@ class BulletDrawer (private val container: FrameLayout){
             if (element.material.simpleBulletCanDestroy){
                 stopBullet()
                 removeView(element)
-                elementsOnContainer.remove(element)
+                elements.remove(element)
+                removeTank(element)
             }else{
                 stopBullet()
             }
         }
+    }
+
+    private fun removeTank(element: Element) {
+        val tanksElements = enemyDrawer.tanks.map { it.element }
+        val tankIndex = tanksElements.indexOf(element)
+        enemyDrawer.removeTank(tankIndex)
     }
 
     private fun stopBullet(){
@@ -162,27 +171,26 @@ class BulletDrawer (private val container: FrameLayout){
 
     }
 
-    private fun compareCollections(
-        elementsOnContainer: MutableList<Element>,
-        detectedCoordinateList: List<Coordinate>){
-
+    private fun compareCollections(detectedCoordinateList: List<Coordinate>){
             for (coordinate in detectedCoordinateList){
-                val element = getElementByCoordinate(coordinate, elementsOnContainer)
+                var element = getElementByCoordinate(coordinate, elements)
+                if (element == null) {
+                    element = getTankByCoordinate(coordinate, enemyDrawer.tanks)
+                }
                 if (element == tank.element) { continue }
-                removeElementAndStopBullet(element, elementsOnContainer)
+                removeElementAndStopBullet(element)
         }
     }
 
     private fun chooseBehaviorInTermsOfDirections(
-        elementsOnContainer: MutableList<Element>,
         currentDirection: Direction,
         bulletCoordinate: Coordinate){
         when (currentDirection){
             Direction.DOWN, Direction.UP -> {
-                compareCollections(elementsOnContainer, getCoordinatesForTopOrBottomDirection(bulletCoordinate))
+                compareCollections(getCoordinatesForTopOrBottomDirection(bulletCoordinate))
             }
             Direction.LEFT, Direction.RIGHT -> {
-                compareCollections(elementsOnContainer, getCoordinatesForLeftOrRightDirection(bulletCoordinate))
+                compareCollections(getCoordinatesForLeftOrRightDirection(bulletCoordinate))
             }
         }
     }

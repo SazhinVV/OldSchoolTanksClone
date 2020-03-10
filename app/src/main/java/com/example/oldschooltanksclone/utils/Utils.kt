@@ -9,6 +9,10 @@ import com.example.oldschooltanksclone.HORIZONTAL_MAX_SIZE
 import com.example.oldschooltanksclone.VERTICAL_MAX_SIZE
 import com.example.oldschooltanksclone.classes.models.Coordinate
 import com.example.oldschooltanksclone.classes.models.Element
+import com.example.oldschooltanksclone.classes.models.Tank
+import kotlin.random.Random
+
+const val TOTAL_PERCENT = 100
 
 fun View.checkViewCanMoveThroughBorder(coordinate: Coordinate):Boolean{
     if (coordinate.top >= 0
@@ -37,6 +41,11 @@ fun getElementByCoordinate(coordinate: Coordinate, elementsOnContainer: List<Ele
     return null
 }
 
+fun getTankByCoordinate(coordinate: Coordinate, tanksList: MutableList<Tank>):Element?{
+    return getElementByCoordinate(coordinate, tanksList.map { it.element })
+}
+
+
 fun Element.drawElement(container: FrameLayout){
     val view = ImageView(container.context)
     val layoutParams = FrameLayout.LayoutParams(this.width * CELL_SIZE, this.height * CELL_SIZE)
@@ -55,4 +64,8 @@ fun FrameLayout.runOnUiThread(block: () -> Unit){
     (this.context as Activity).runOnUiThread {
         block()
     }
+}
+
+fun checkIfChanceBiggerThanRandom(percentChance: Int):Boolean{
+    return Random.nextInt(TOTAL_PERCENT) <= percentChance
 }
