@@ -6,20 +6,21 @@ import com.example.oldschooltanksclone.CELL_SIZE
 import com.example.oldschooltanksclone.classes.enums.Direction
 import com.example.oldschooltanksclone.classes.enums.Material
 import com.example.oldschooltanksclone.drawers.BulletDrawer
+import com.example.oldschooltanksclone.drawers.EnemyDrawer
 import com.example.oldschooltanksclone.utils.*
 import kotlin.random.Random
 
 class Tank constructor(
     val element: Element,
     var direction: Direction,
-    val bulletDrawer: BulletDrawer
+    private val enemyDrawer: EnemyDrawer
 ){
 
     fun move(direction: Direction,
              container: FrameLayout,
              elementsOnContainer: List<Element>) {
         val view = container.findViewById<View>(element.viewId) ?: return
-        val currentCoordinate = getTankCurrentCoordinate(view)
+        val currentCoordinate = view.getViewCoordinate()
         this.direction = direction
         view.rotation = direction.rotation
         val nextCoordinate = getTankNextCoordinate(view)
@@ -58,14 +59,6 @@ class Tank constructor(
             container.removeView(view)
             container.addView(view, 0)
         }
-    }
-
-    private fun getTankCurrentCoordinate(tank: View):Coordinate{
-        return Coordinate(
-            (tank.layoutParams as FrameLayout.LayoutParams).topMargin,
-            (tank.layoutParams as FrameLayout.LayoutParams).leftMargin
-        )
-
     }
 
     private fun getTankNextCoordinate(view: View):Coordinate{
@@ -107,7 +100,7 @@ class Tank constructor(
         for (anyCoordinate in getTankCoordinates(coordinate)) {
             var element = getElementByCoordinate(anyCoordinate, elementsOnContainer)
             if (element == null){
-                element = getTankByCoordinate(anyCoordinate, bulletDrawer.enemyDrawer.tanks)
+                element = getTankByCoordinate(anyCoordinate, enemyDrawer.tanks)
             }
             if (element != null && !element.material.tankCanGoThrough) {
                 if (this == element){
@@ -118,5 +111,7 @@ class Tank constructor(
         }
         return true
     }
+
+
 
 }

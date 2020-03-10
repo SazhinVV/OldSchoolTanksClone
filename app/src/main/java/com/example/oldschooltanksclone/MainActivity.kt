@@ -30,13 +30,20 @@ const val HORIZONTAL_MAX_SIZE = CELL_SIZE * HORIZONTAL_CELL_AMOUNT
 class MainActivity : AppCompatActivity() {
     private var editMode = false
 
+    private val bulletDrawer by lazy{
+        BulletDrawer(
+            container,
+            elementsDrawer.elementsOnContainer,
+            enemyDrawer
+        )
+    }
+
     private val playerTank by lazy {
         Tank(
             Element(
                 material = Material.PLAYER_TANK,
                 coordinate = getPlayerTankCoordinate()
-            ), UP, BulletDrawer(container, elementsDrawer.elementsOnContainer, enemyDrawer)
-        )
+            ), UP, enemyDrawer)
     }
 
     private fun getPlayerTankCoordinate() = Coordinate(
@@ -74,6 +81,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        enemyDrawer.bulletDrawer = bulletDrawer
         container.layoutParams = FrameLayout.LayoutParams(VERTICAL_MAX_SIZE, HORIZONTAL_MAX_SIZE)
         editor_clear.setOnClickListener { elementsDrawer.currentMaterial = Material.EMPTY }
         editor_brick.setOnClickListener { elementsDrawer.currentMaterial = Material.BRICK }
@@ -148,8 +156,7 @@ class MainActivity : AppCompatActivity() {
             KEYCODE_DPAD_DOWN -> move(DOWN)
             KEYCODE_DPAD_LEFT -> move(LEFT)
             KEYCODE_DPAD_RIGHT -> move(RIGHT)
-            KEYCODE_SPACE -> playerTank.bulletDrawer.makeBulletMove(playerTank)
-
+            KEYCODE_SPACE -> bulletDrawer.addNewBulletForTank(playerTank)
         }
         return super.onKeyDown(keyCode, event)
     }
