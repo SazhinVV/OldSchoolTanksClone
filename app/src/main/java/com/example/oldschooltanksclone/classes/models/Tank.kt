@@ -2,7 +2,7 @@ package com.example.oldschooltanksclone.classes.models
 
 import android.view.View
 import android.widget.FrameLayout
-import com.example.oldschooltanksclone.CELL_SIZE
+import com.example.oldschooltanksclone.activities.CELL_SIZE
 import com.example.oldschooltanksclone.classes.enums.Direction
 import com.example.oldschooltanksclone.classes.enums.Material
 import com.example.oldschooltanksclone.drawers.EnemyDrawer

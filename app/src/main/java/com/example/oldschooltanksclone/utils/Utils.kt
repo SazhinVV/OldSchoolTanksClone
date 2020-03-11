@@ -4,9 +4,9 @@ import android.app.Activity
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
-import com.example.oldschooltanksclone.CELL_SIZE
-import com.example.oldschooltanksclone.HORIZONTAL_MAX_SIZE
-import com.example.oldschooltanksclone.VERTICAL_MAX_SIZE
+import com.example.oldschooltanksclone.activities.CELL_SIZE
+import com.example.oldschooltanksclone.activities.HORIZONTAL_MAX_SIZE
+import com.example.oldschooltanksclone.activities.VERTICAL_MAX_SIZE
 import com.example.oldschooltanksclone.classes.models.Coordinate
 import com.example.oldschooltanksclone.classes.models.Element
 import com.example.oldschooltanksclone.classes.models.Tank

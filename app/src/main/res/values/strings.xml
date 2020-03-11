@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">OldSchoolTanksClone</string>
     <string name="game_over">GAME \n OVER</string>
+    <string name="stage_1">STAGE 1</string>
 </resources>

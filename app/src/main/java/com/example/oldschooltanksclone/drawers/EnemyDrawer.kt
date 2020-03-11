@@ -1,11 +1,11 @@
 package com.example.oldschooltanksclone.drawers
 
 import android.widget.FrameLayout
-import com.example.oldschooltanksclone.CELL_SIZE
-import com.example.oldschooltanksclone.HALF_WIDTH_OF_CONTAINER
-import com.example.oldschooltanksclone.VERTICAL_MAX_SIZE
+import com.example.oldschooltanksclone.activities.CELL_SIZE
+import com.example.oldschooltanksclone.activities.HALF_WIDTH_OF_CONTAINER
+import com.example.oldschooltanksclone.activities.VERTICAL_MAX_SIZE
 import com.example.oldschooltanksclone.classes.GameCore
-import com.example.oldschooltanksclone.classes.SoundManager
+import com.example.oldschooltanksclone.classes.sounds.MainSoundPlayers
 import com.example.oldschooltanksclone.classes.enums.Direction
 import com.example.oldschooltanksclone.classes.enums.Material
 import com.example.oldschooltanksclone.classes.models.Coordinate
@@ -19,7 +19,7 @@ private const val MAX_ENEMY_AMOUNT = 20
 class EnemyDrawer(
     private val container: FrameLayout,
     private val elements: MutableList<Element>,
-    private val soundManager: SoundManager,
+    private val mainSoundPlayers: MainSoundPlayers,
     private val gameCore: GameCore
 ) {
     private val respawnList: List<Coordinate>
@@ -90,9 +90,9 @@ class EnemyDrawer(
 
     private fun goThroughAllTanks() {
         if (tanks.isNotEmpty()) {
-            soundManager.tankMove()
+            mainSoundPlayers.tankMove()
         } else {
-            soundManager.tankStop()
+            mainSoundPlayers.tankStop()
         }
         tanks.toList().forEach {
             it.move(it.direction, container, elements)
@@ -102,7 +102,16 @@ class EnemyDrawer(
         }
     }
 
+    fun isALLTanksDestroyed(): Boolean {
+        return enemyAmount == MAX_ENEMY_AMOUNT && tanks.toList().isEmpty()
+    }
+
+    fun getPlayerScore() = enemyAmount * 100
+
     fun removeTank(tankIndex: Int) {
         tanks.removeAt(tankIndex)
+        if (isALLTanksDestroyed()) {
+            gameCore.playerWon(getPlayerScore())
+        }
     }
 }

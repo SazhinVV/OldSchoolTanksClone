@@ -1,5 +1,7 @@
-package com.example.oldschooltanksclone
+package com.example.oldschooltanksclone.activities
 
+import android.app.Activity
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.KeyEvent
@@ -10,9 +12,10 @@ import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.widget.FrameLayout
 import androidx.core.content.ContextCompat
+import com.example.oldschooltanksclone.R
 import com.example.oldschooltanksclone.classes.GameCore
 import com.example.oldschooltanksclone.classes.LevelStorage
-import com.example.oldschooltanksclone.classes.SoundManager
+import com.example.oldschooltanksclone.classes.sounds.MainSoundPlayers
 import com.example.oldschooltanksclone.classes.enums.Direction
 import com.example.oldschooltanksclone.classes.enums.Direction.*
 import com.example.oldschooltanksclone.classes.enums.Material
@@ -52,7 +55,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private val soundManager by lazy {
-        SoundManager(this)
+        MainSoundPlayers(this)
     }
 
     private fun getPlayerTankCoordinate() = Coordinate(
@@ -94,8 +97,12 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        soundManager.loadSounds()
         enemyDrawer.bulletDrawer = bulletDrawer
-        container.layoutParams = FrameLayout.LayoutParams(VERTICAL_MAX_SIZE, HORIZONTAL_MAX_SIZE)
+        container.layoutParams = FrameLayout.LayoutParams(
+            VERTICAL_MAX_SIZE,
+            HORIZONTAL_MAX_SIZE
+        )
         editor_clear.setOnClickListener { elementsDrawer.currentMaterial = Material.EMPTY }
         editor_brick.setOnClickListener { elementsDrawer.currentMaterial = Material.BRICK }
         editor_concrete.setOnClickListener { elementsDrawer.currentMaterial = Material.CONCRETE }
@@ -145,13 +152,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startTheGame() {
-        item.icon = ContextCompat.getDrawable(this, R.drawable.ic_pause)
+        item.icon = ContextCompat.getDrawable(this,
+            R.drawable.ic_pause
+        )
         enemyDrawer.startEnemyCreation()
         soundManager.playIntroMusic()
     }
 
     private fun pauseTheGame() {
-        item.icon = ContextCompat.getDrawable(this, R.drawable.ic_play)
+        item.icon = ContextCompat.getDrawable(this,
+            R.drawable.ic_play
+        )
         gameCore.pauseTheGame()
         soundManager.pauseSounds()
     }
@@ -211,5 +222,12 @@ class MainActivity : AppCompatActivity() {
         if (enemyDrawer.tanks.isEmpty()) {
             soundManager.tankStop()
         }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (resultCode == Activity.RESULT_OK && requestCode == SCORE_REQUEST_CODE){
+            recreate()
+        }
+        super.onActivityResult(requestCode, resultCode, data)
     }
 }

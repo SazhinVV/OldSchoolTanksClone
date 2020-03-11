@@ -4,10 +4,10 @@ import android.app.Activity
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
-import com.example.oldschooltanksclone.CELL_SIZE
+import com.example.oldschooltanksclone.activities.CELL_SIZE
 import com.example.oldschooltanksclone.R
 import com.example.oldschooltanksclone.classes.GameCore
-import com.example.oldschooltanksclone.classes.SoundManager
+import com.example.oldschooltanksclone.classes.sounds.MainSoundPlayers
 import com.example.oldschooltanksclone.classes.enums.Direction
 import com.example.oldschooltanksclone.classes.enums.Material
 import com.example.oldschooltanksclone.classes.models.Bullet
@@ -23,7 +23,7 @@ class BulletDrawer(
     private val container: FrameLayout,
     private val elements: MutableList<Element>,
     private val enemyDrawer: EnemyDrawer,
-    private val soundManager: SoundManager,
+    private val mainSoundPlayers: MainSoundPlayers,
     private val gameCore: GameCore
 ) {
 
@@ -38,7 +38,7 @@ class BulletDrawer(
         val view = container.findViewById<View>(tank.element.viewId) ?: return
         if (tank.alreadyHasBullet()) return
         allBullets.add(Bullet(createBullet(view, tank.direction), tank.direction, tank))
-        soundManager.bulletShot()
+        mainSoundPlayers.bulletShot()
     }
 
     private fun Tank.alreadyHasBullet(): Boolean =
@@ -162,9 +162,11 @@ class BulletDrawer(
         val tanksElements = enemyDrawer.tanks.map { it.element }
         val tankIndex = tanksElements.indexOf(element)
         if (tankIndex < 0) return
-        soundManager.bulletBurst()
+        mainSoundPlayers.bulletBurst()
         enemyDrawer.removeTank(tankIndex)
-
+        if (enemyDrawer.isALLTanksDestroyed()){
+            gameCore.playerWon(enemyDrawer.getPlayerScore())
+        }
     }
 
     private fun stopBullet(bullet: Bullet) {

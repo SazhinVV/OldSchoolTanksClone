@@ -2,7 +2,7 @@ package com.example.oldschooltanksclone.drawers
 
 import android.view.View
 import android.widget.FrameLayout
-import com.example.oldschooltanksclone.CELL_SIZE
+import com.example.oldschooltanksclone.activities.CELL_SIZE
 import com.example.oldschooltanksclone.classes.enums.Material
 import com.example.oldschooltanksclone.classes.models.Coordinate
 import com.example.oldschooltanksclone.classes.models.Element
@@ -83,7 +83,8 @@ class ElementsDrawer(val container: FrameLayout) {
                     for (width in 0 until currentMaterial.width){
                         if (element.coordinate == Coordinate(
                                 coordinate.top + height * CELL_SIZE,
-                                coordinate.left + width * CELL_SIZE)){
+                                coordinate.left + width * CELL_SIZE
+                            )){
                             elements.add(element)
                         }
                     }

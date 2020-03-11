@@ -5,21 +5,28 @@ import android.view.View
 import android.view.animation.AnimationUtils
 import android.widget.TextView
 import com.example.oldschooltanksclone.R
-import kotlinx.android.synthetic.main.activity_main.view.*
+import com.example.oldschooltanksclone.activities.SCORE_REQUEST_CODE
+import com.example.oldschooltanksclone.activities.ScoreActivity
 
 class GameCore (private val activity: Activity){
     @Volatile
     private var isPlay = false
     private var isPlayerOrBaseDestroyed = false
+    private var isPlayerWin = false
 
     fun startOrPauseTheGame(){
         isPlay = !isPlay
     }
 
-    fun isPlaying() = isPlay && !isPlayerOrBaseDestroyed
+    fun isPlaying() = isPlay && !isPlayerOrBaseDestroyed && !isPlayerWin
 
     fun pauseTheGame (){
         isPlay = false
+    }
+
+    fun playerWon(score: Int){
+        isPlayerWin = true
+        activity.startActivityForResult(ScoreActivity.createIntent(activity, score), SCORE_REQUEST_CODE)
     }
 
     fun destroyBaseOrPlayer(){

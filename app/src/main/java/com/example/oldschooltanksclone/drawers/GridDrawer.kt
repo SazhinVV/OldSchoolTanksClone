@@ -1,11 +1,8 @@
 package com.example.oldschooltanksclone.drawers
 
-import android.app.Activity
-import android.content.Context
 import android.view.View
 import android.widget.FrameLayout
-import com.example.oldschooltanksclone.CELL_SIZE
-import com.example.oldschooltanksclone.R
+import com.example.oldschooltanksclone.activities.CELL_SIZE
 
 class GridDrawer(private val container: FrameLayout){
     private val allLines = mutableListOf<View>()
