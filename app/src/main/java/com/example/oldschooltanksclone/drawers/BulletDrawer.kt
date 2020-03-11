@@ -6,6 +6,8 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import com.example.oldschooltanksclone.CELL_SIZE
 import com.example.oldschooltanksclone.R
+import com.example.oldschooltanksclone.classes.GameCore.isPlaying
+import com.example.oldschooltanksclone.classes.SoundManager
 import com.example.oldschooltanksclone.classes.enums.Direction
 import com.example.oldschooltanksclone.classes.enums.Material
 import com.example.oldschooltanksclone.classes.models.Bullet
@@ -33,6 +35,7 @@ class BulletDrawer(
         val view = container.findViewById<View>(tank.element.viewId) ?: return
         if (tank.alreadyHasBullet()) return
         allBullets.add(Bullet(createBullet(view, tank.direction), tank.direction, tank))
+        SoundManager.bulletShot()
     }
 
     private fun Tank.alreadyHasBullet(): Boolean =
@@ -41,6 +44,9 @@ class BulletDrawer(
     private fun moveAllBullets() {
         Thread(Runnable {
             while (true) {
+                if (!isPlaying()) {
+                    continue
+                }
                 interactWithAllBullets()
                 Thread.sleep(30)
             }
@@ -48,7 +54,7 @@ class BulletDrawer(
     }
 
     private fun interactWithAllBullets() {
-        allBullets.forEach { bullet ->
+        allBullets.toList().forEach { bullet ->
             val view = bullet.view
             if (bullet.canBulletGoFurther()) {
                 when (bullet.direction) {
@@ -65,15 +71,34 @@ class BulletDrawer(
             } else {
                 stopBullet(bullet)
             }
+            bullet.stopIntersectingBullets()
         }
+        removeInconsistentBullets()
+    }
+
+    private fun removeInconsistentBullets() {
         val removingList = allBullets.filter { !it.canBulletMoveFurther }
         removingList.forEach {
-            stopBullet(it)
             container.runOnUiThread {
                 container.removeView(it.view)
             }
         }
         allBullets.removeAll(removingList)
+    }
+
+    private fun Bullet.stopIntersectingBullets() {
+        val bulletCoordinate = this.view.getViewCoordinate()
+        for (bulletInList in allBullets) {
+            val coordinateInList = bulletInList.view.getViewCoordinate()
+            if (this == bulletInList) {
+                continue
+            }
+            if (coordinateInList == bulletCoordinate) {
+                stopBullet(this)
+                stopBullet(bulletInList)
+                return
+            }
+        }
     }
 
     private fun Bullet.canBulletGoFurther() =
@@ -126,7 +151,10 @@ class BulletDrawer(
     private fun removeTank(element: Element) {
         val tanksElements = enemyDrawer.tanks.map { it.element }
         val tankIndex = tanksElements.indexOf(element)
+        if (tankIndex < 0) return
+        SoundManager.bulletBurst()
         enemyDrawer.removeTank(tankIndex)
+
     }
 
     private fun stopBullet(bullet: Bullet) {
@@ -208,4 +236,3 @@ class BulletDrawer(
         return startCoordinate + (CELL_SIZE - bulletSize / 2)
     }
 }
-

@@ -9,7 +9,12 @@ import android.view.MenuItem
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.widget.FrameLayout
+import androidx.core.content.ContextCompat
+import com.example.oldschooltanksclone.classes.GameCore
+import com.example.oldschooltanksclone.classes.GameCore.isPlaying
+import com.example.oldschooltanksclone.classes.GameCore.startOrPauseTheGame
 import com.example.oldschooltanksclone.classes.LevelStorage
+import com.example.oldschooltanksclone.classes.SoundManager
 import com.example.oldschooltanksclone.classes.enums.Direction
 import com.example.oldschooltanksclone.classes.enums.Direction.*
 import com.example.oldschooltanksclone.classes.enums.Material
@@ -28,6 +33,7 @@ const val HALF_WIDTH_OF_CONTAINER = VERTICAL_MAX_SIZE / 2
 
 class MainActivity : AppCompatActivity() {
     private var editMode = false
+    private lateinit var item: MenuItem
     private val playerTank by lazy {
         Tank(
             Element(
@@ -47,7 +53,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun getPlayerTankCoordinate() = Coordinate(
         top = HORIZONTAL_MAX_SIZE - Material.PLAYER_TANK.height * CELL_SIZE,
-        left = HALF_WIDTH_OF_CONTAINER - 6 * CELL_SIZE
+        left = HALF_WIDTH_OF_CONTAINER - 8 * CELL_SIZE
     )
 
     private val eagle = Element(
@@ -80,6 +86,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        SoundManager.context = this
         enemyDrawer.bulletDrawer = bulletDrawer
         container.layoutParams = FrameLayout.LayoutParams(VERTICAL_MAX_SIZE, HORIZONTAL_MAX_SIZE)
         editor_clear.setOnClickListener { elementsDrawer.currentMaterial = Material.EMPTY }
@@ -100,6 +107,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.settings, menu)
+        item = menu.findItem(R.id.menu_play_game)
         return true
     }
 
@@ -114,7 +122,15 @@ class MainActivity : AppCompatActivity() {
                 true
             }
             R.id.menu_play_game -> {
-                startTheGame()
+                if (editMode) {
+                    return true
+                }
+                startOrPauseTheGame()
+                if (isPlaying()) {
+                    startTheGame()
+                } else {
+                    pauseTheGame()
+                }
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -122,11 +138,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startTheGame() {
-        if (editMode) {
-            return
-        }
+        item.icon = ContextCompat.getDrawable(this, R.drawable.ic_pause)
         enemyDrawer.startEnemyCreation()
-        enemyDrawer.moveEnemyTanks()
+        SoundManager.playIntroMusic()
+    }
+
+    private fun pauseTheGame() {
+        item.icon = ContextCompat.getDrawable(this, R.drawable.ic_play)
+        GameCore.pauseTheGame()
+        SoundManager.pauseSounds()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        pauseTheGame()
     }
 
     private fun switchEditMode() {
@@ -149,17 +174,35 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        if (!isPlaying()) {
+            return super.onKeyDown(keyCode, event)
+        }
         when (keyCode) {
-            KEYCODE_DPAD_UP -> move(UP)
-            KEYCODE_DPAD_LEFT -> move(LEFT)
-            KEYCODE_DPAD_DOWN -> move(DOWN)
-            KEYCODE_DPAD_RIGHT -> move(RIGHT)
+            KEYCODE_DPAD_UP -> onButtonPressed(UP)
+            KEYCODE_DPAD_LEFT -> onButtonPressed(LEFT)
+            KEYCODE_DPAD_DOWN -> onButtonPressed(DOWN)
+            KEYCODE_DPAD_RIGHT -> onButtonPressed(RIGHT)
             KEYCODE_SPACE -> bulletDrawer.addNewBulletForTank(playerTank)
         }
         return super.onKeyDown(keyCode, event)
     }
 
-    private fun move(direction: Direction) {
+    private fun onButtonPressed(direction: Direction) {
+        SoundManager.tankMove()
         playerTank.move(direction, container, elementsDrawer.elementsOnContainer)
+    }
+
+
+    override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
+        when (keyCode) {
+            KEYCODE_DPAD_UP, KEYCODE_DPAD_LEFT, KEYCODE_DPAD_DOWN, KEYCODE_DPAD_RIGHT -> onButtonReleased()
+        }
+        return super.onKeyUp(keyCode, event)
+    }
+
+    private fun onButtonReleased() {
+        if (enemyDrawer.tanks.isEmpty()) {
+            SoundManager.tankStop()
+        }
     }
 }

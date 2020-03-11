@@ -4,6 +4,8 @@ import android.widget.FrameLayout
 import com.example.oldschooltanksclone.CELL_SIZE
 import com.example.oldschooltanksclone.HALF_WIDTH_OF_CONTAINER
 import com.example.oldschooltanksclone.VERTICAL_MAX_SIZE
+import com.example.oldschooltanksclone.classes.GameCore.isPlaying
+import com.example.oldschooltanksclone.classes.SoundManager
 import com.example.oldschooltanksclone.classes.enums.Direction
 import com.example.oldschooltanksclone.classes.enums.Material
 import com.example.oldschooltanksclone.classes.models.Coordinate
@@ -22,8 +24,8 @@ class EnemyDrawer(
     private var enemyAmount = 0
     private var currentCoordinate: Coordinate
     val tanks = mutableListOf<Tank>()
-    private var moveAllTanksThread: Thread? = null
     lateinit var bulletDrawer: BulletDrawer
+    private var gameStarted = false
 
     init {
         respawnList = getRespawnList()
@@ -39,13 +41,21 @@ class EnemyDrawer(
     }
 
     fun startEnemyCreation() {
+        if (gameStarted) {
+            return
+        }
+        gameStarted = true
         Thread(Runnable {
             while (enemyAmount < MAX_ENEMY_AMOUNT) {
+                if (!isPlaying()) {
+                    continue
+                }
                 drawEnemy()
                 enemyAmount++
                 Thread.sleep(3000)
             }
         }).start()
+        moveEnemyTanks()
     }
 
     private fun drawEnemy() {
@@ -64,9 +74,12 @@ class EnemyDrawer(
         tanks.add(enemyTank)
     }
 
-    fun moveEnemyTanks() {
+    private fun moveEnemyTanks() {
         Thread(Runnable {
             while (true) {
+                if (!isPlaying()) {
+                    continue
+                }
                 goThroughAllTanks()
                 Thread.sleep(400)
             }
@@ -74,20 +87,20 @@ class EnemyDrawer(
     }
 
     private fun goThroughAllTanks() {
-        moveAllTanksThread = Thread(Runnable {
-            tanks.forEach {
-                it.move(it.direction, container, elements)
-                if (checkIfChanceBiggerThanRandom(10)) {
-                    bulletDrawer.addNewBulletForTank(it)
-                }
+        if (tanks.isNotEmpty()) {
+            SoundManager.tankMove()
+        } else {
+            SoundManager.tankStop()
+        }
+        tanks.toList().forEach {
+            it.move(it.direction, container, elements)
+            if (checkIfChanceBiggerThanRandom(10)) {
+                bulletDrawer.addNewBulletForTank(it)
             }
-        })
-        moveAllTanksThread?.start()
+        }
     }
 
     fun removeTank(tankIndex: Int) {
-        if (tankIndex < 0) return
-        moveAllTanksThread?.join()
         tanks.removeAt(tankIndex)
     }
 }
