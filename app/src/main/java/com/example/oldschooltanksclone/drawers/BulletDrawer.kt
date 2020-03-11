@@ -6,7 +6,7 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import com.example.oldschooltanksclone.CELL_SIZE
 import com.example.oldschooltanksclone.R
-import com.example.oldschooltanksclone.classes.GameCore.isPlaying
+import com.example.oldschooltanksclone.classes.GameCore
 import com.example.oldschooltanksclone.classes.SoundManager
 import com.example.oldschooltanksclone.classes.enums.Direction
 import com.example.oldschooltanksclone.classes.enums.Material
@@ -22,7 +22,9 @@ private const val BULLET_HEIGHT = 25
 class BulletDrawer(
     private val container: FrameLayout,
     private val elements: MutableList<Element>,
-    private val enemyDrawer: EnemyDrawer
+    private val enemyDrawer: EnemyDrawer,
+    private val soundManager: SoundManager,
+    private val gameCore: GameCore
 ) {
 
     init {
@@ -31,11 +33,12 @@ class BulletDrawer(
 
     private val allBullets = mutableListOf<Bullet>()
 
+
     fun addNewBulletForTank(tank: Tank) {
         val view = container.findViewById<View>(tank.element.viewId) ?: return
         if (tank.alreadyHasBullet()) return
         allBullets.add(Bullet(createBullet(view, tank.direction), tank.direction, tank))
-        SoundManager.bulletShot()
+        soundManager.bulletShot()
     }
 
     private fun Tank.alreadyHasBullet(): Boolean =
@@ -44,7 +47,7 @@ class BulletDrawer(
     private fun moveAllBullets() {
         Thread(Runnable {
             while (true) {
-                if (!isPlaying()) {
+                if (!gameCore.isPlaying()) {
                     continue
                 }
                 interactWithAllBullets()
@@ -140,7 +143,7 @@ class BulletDrawer(
             if (element.material.simpleBulletCanDestroy) {
                 stopBullet(bullet)
                 removeView(element)
-                elements.remove(element)
+                removeElement(element)
                 removeTank(element)
             } else {
                 stopBullet(bullet)
@@ -148,11 +151,18 @@ class BulletDrawer(
         }
     }
 
+    private fun removeElement(element: Element){
+        elements.remove(element)
+        if (element.material == Material.PLAYER_TANK || element.material == Material.EAGLE){
+            gameCore.destroyBaseOrPlayer()
+        }
+    }
+
     private fun removeTank(element: Element) {
         val tanksElements = enemyDrawer.tanks.map { it.element }
         val tankIndex = tanksElements.indexOf(element)
         if (tankIndex < 0) return
-        SoundManager.bulletBurst()
+        soundManager.bulletBurst()
         enemyDrawer.removeTank(tankIndex)
 
     }

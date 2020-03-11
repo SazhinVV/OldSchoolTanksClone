@@ -11,8 +11,6 @@ import android.view.View.VISIBLE
 import android.widget.FrameLayout
 import androidx.core.content.ContextCompat
 import com.example.oldschooltanksclone.classes.GameCore
-import com.example.oldschooltanksclone.classes.GameCore.isPlaying
-import com.example.oldschooltanksclone.classes.GameCore.startOrPauseTheGame
 import com.example.oldschooltanksclone.classes.LevelStorage
 import com.example.oldschooltanksclone.classes.SoundManager
 import com.example.oldschooltanksclone.classes.enums.Direction
@@ -47,8 +45,14 @@ class MainActivity : AppCompatActivity() {
         BulletDrawer(
             container,
             elementsDrawer.elementsOnContainer,
-            enemyDrawer
+            enemyDrawer,
+            soundManager,
+            gameCore
         )
+    }
+
+    private val soundManager by lazy {
+        SoundManager(this)
     }
 
     private fun getPlayerTankCoordinate() = Coordinate(
@@ -75,18 +79,21 @@ class MainActivity : AppCompatActivity() {
         ElementsDrawer(container)
     }
 
+    private val gameCore by lazy {
+        GameCore(this)
+    }
+
     private val levelStorage by lazy {
         LevelStorage(this)
     }
 
     private val enemyDrawer by lazy {
-        EnemyDrawer(container, elementsDrawer.elementsOnContainer)
+        EnemyDrawer(container, elementsDrawer.elementsOnContainer, soundManager, gameCore)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        SoundManager.context = this
         enemyDrawer.bulletDrawer = bulletDrawer
         container.layoutParams = FrameLayout.LayoutParams(VERTICAL_MAX_SIZE, HORIZONTAL_MAX_SIZE)
         editor_clear.setOnClickListener { elementsDrawer.currentMaterial = Material.EMPTY }
@@ -125,8 +132,8 @@ class MainActivity : AppCompatActivity() {
                 if (editMode) {
                     return true
                 }
-                startOrPauseTheGame()
-                if (isPlaying()) {
+                gameCore.startOrPauseTheGame()
+                if (gameCore.isPlaying()) {
                     startTheGame()
                 } else {
                     pauseTheGame()
@@ -140,13 +147,13 @@ class MainActivity : AppCompatActivity() {
     private fun startTheGame() {
         item.icon = ContextCompat.getDrawable(this, R.drawable.ic_pause)
         enemyDrawer.startEnemyCreation()
-        SoundManager.playIntroMusic()
+        soundManager.playIntroMusic()
     }
 
     private fun pauseTheGame() {
         item.icon = ContextCompat.getDrawable(this, R.drawable.ic_play)
-        GameCore.pauseTheGame()
-        SoundManager.pauseSounds()
+        gameCore.pauseTheGame()
+        soundManager.pauseSounds()
     }
 
     override fun onPause() {
@@ -174,7 +181,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        if (!isPlaying()) {
+        if (!gameCore.isPlaying()) {
             return super.onKeyDown(keyCode, event)
         }
         when (keyCode) {
@@ -188,7 +195,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun onButtonPressed(direction: Direction) {
-        SoundManager.tankMove()
+        soundManager.tankMove()
         playerTank.move(direction, container, elementsDrawer.elementsOnContainer)
     }
 
@@ -202,7 +209,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun onButtonReleased() {
         if (enemyDrawer.tanks.isEmpty()) {
-            SoundManager.tankStop()
+            soundManager.tankStop()
         }
     }
 }
