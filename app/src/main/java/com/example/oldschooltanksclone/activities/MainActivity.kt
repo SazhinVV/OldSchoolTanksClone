@@ -8,10 +8,12 @@ import android.view.KeyEvent
 import android.view.KeyEvent.*
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.widget.FrameLayout
 import androidx.core.content.ContextCompat
+import com.example.oldschooltanksclone.ProgressIndicator
 import com.example.oldschooltanksclone.R
 import com.example.oldschooltanksclone.classes.GameCore
 import com.example.oldschooltanksclone.classes.LevelStorage
@@ -32,9 +34,10 @@ const val VERTICAL_MAX_SIZE = CELL_SIZE * VERTICAL_CELL_AMOUNT
 const val HORIZONTAL_MAX_SIZE = CELL_SIZE * HORIZONTAL_CELL_AMOUNT
 const val HALF_WIDTH_OF_CONTAINER = VERTICAL_MAX_SIZE / 2
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), ProgressIndicator {
     private var editMode = false
     private lateinit var item: MenuItem
+    private var gameStarted = false
     private val playerTank by lazy {
         Tank(
             Element(
@@ -55,7 +58,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private val soundManager by lazy {
-        MainSoundPlayers(this)
+        MainSoundPlayers(this, this)
     }
 
     private fun getPlayerTankCoordinate() = Coordinate(
@@ -97,7 +100,6 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        soundManager.loadSounds()
         enemyDrawer.bulletDrawer = bulletDrawer
         container.layoutParams = FrameLayout.LayoutParams(
             VERTICAL_MAX_SIZE,
@@ -139,24 +141,32 @@ class MainActivity : AppCompatActivity() {
                 if (editMode) {
                     return true
                 }
-                gameCore.startOrPauseTheGame()
+                showIntro()
+                if (soundManager.areSoundsReady()){
+                    gameCore.startOrPauseTheGame()
                 if (gameCore.isPlaying()) {
-                    startTheGame()
+                    resumeTheGame()
                 } else {
                     pauseTheGame()
                 }
+            }
                 true
             }
             else -> super.onOptionsItemSelected(item)
         }
     }
 
-    private fun startTheGame() {
-        item.icon = ContextCompat.getDrawable(this,
-            R.drawable.ic_pause
-        )
-        enemyDrawer.startEnemyCreation()
-        soundManager.playIntroMusic()
+    private fun resumeTheGame() {
+        item.icon = ContextCompat.getDrawable(this, R.drawable.ic_pause)
+        gameCore.resumeTheGame()
+    }
+
+    private fun showIntro() {
+        if (gameStarted){
+            return
+        }
+        gameStarted = true
+        soundManager.loadSounds()
     }
 
     private fun pauseTheGame() {
@@ -212,6 +222,9 @@ class MainActivity : AppCompatActivity() {
 
 
     override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
+        if (!gameCore.isPlaying()) {
+            return super.onKeyUp(keyCode, event)
+        }
         when (keyCode) {
             KEYCODE_DPAD_UP, KEYCODE_DPAD_LEFT, KEYCODE_DPAD_DOWN, KEYCODE_DPAD_RIGHT -> onButtonReleased()
         }
@@ -229,5 +242,20 @@ class MainActivity : AppCompatActivity() {
             recreate()
         }
         super.onActivityResult(requestCode, resultCode, data)
+    }
+
+    override fun showProgress() {
+        container.visibility = GONE
+        total_container.setBackgroundResource(R.color.gray)
+        init_title.visibility = VISIBLE
+    }
+
+    override fun dismissProgress() {
+        container.visibility = VISIBLE
+        total_container.setBackgroundResource(R.color.black)
+        init_title.visibility = GONE
+        enemyDrawer.startEnemyCreation()
+        soundManager.playIntroMusic()
+        resumeTheGame()
     }
 }

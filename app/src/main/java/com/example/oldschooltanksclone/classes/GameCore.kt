@@ -2,6 +2,7 @@ package com.example.oldschooltanksclone.classes
 
 import android.app.Activity
 import android.view.View
+import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.widget.TextView
 import com.example.oldschooltanksclone.R
@@ -24,23 +25,40 @@ class GameCore (private val activity: Activity){
         isPlay = false
     }
 
+    fun resumeTheGame(){
+        isPlay = true
+    }
+
     fun playerWon(score: Int){
         isPlayerWin = true
         activity.startActivityForResult(ScoreActivity.createIntent(activity, score), SCORE_REQUEST_CODE)
     }
 
-    fun destroyBaseOrPlayer(){
+    fun destroyBaseOrPlayer(score: Int){
         isPlayerOrBaseDestroyed = true
         pauseTheGame()
-        animateEndGame()
+        animateEndGame(score)
     }
 
-    private fun animateEndGame() {
+    private fun animateEndGame(score: Int) {
         activity.runOnUiThread {
             val endGameTextView = activity.findViewById<TextView>(R.id.game_over_tv)
             endGameTextView.visibility = View.VISIBLE
             val slideUp = AnimationUtils.loadAnimation(activity, R.anim.slide_up)
             endGameTextView.startAnimation(slideUp)
+            slideUp.setAnimationListener(object : Animation.AnimationListener{
+                override fun onAnimationRepeat(animation: Animation?) {
+
+                }
+
+                override fun onAnimationEnd(animation: Animation?) {
+                    activity.startActivityForResult(ScoreActivity.createIntent(activity, score), SCORE_REQUEST_CODE)
+                }
+
+                override fun onAnimationStart(animation: Animation?) {
+                }
+
+            })
         }
     }
 

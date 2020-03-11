@@ -3,6 +3,7 @@ package com.example.oldschooltanksclone.classes.sounds
 
 import android.content.Context
 import android.media.MediaPlayer
+import com.example.oldschooltanksclone.ProgressIndicator
 import com.example.oldschooltanksclone.R
 import com.example.oldschooltanksclone.classes.sounds.SoundPoolFactory
 
@@ -10,13 +11,17 @@ private const val INTRO_MUSIC_INDEX = 0
 private const val BULLET_SHOT_INDEX = 1
 private const val BULLET_BURST_INDEX = 2
 private const val TANK_MOVE_INDEX = 3
+private const val SUCCES_UPLOAD = 0
 
-class MainSoundPlayers (val context: Context) {
+class MainSoundPlayers (val context: Context, val progressIndicator: ProgressIndicator) {
 
     private val sounds = mutableListOf<GameSound>()
     private val soundPool = SoundPoolFactory().createSoundPool()
+    private var soundsReady = 0
+    private var allSoundLoaded = false
 
     fun loadSounds(){
+        progressIndicator.showProgress()
         sounds.add(INTRO_MUSIC_INDEX, GameSound(
             resourceInPool = soundPool.load(context, R.raw.tanks_pre_music, 1),
             pool = soundPool
@@ -33,7 +38,19 @@ class MainSoundPlayers (val context: Context) {
             resourceInPool = soundPool.load(context, R.raw.tank_move_long, 1),
             pool = soundPool
         ))
+        soundPool.setOnLoadCompleteListener { _, sampleId, status ->
+            if (sampleId == sounds[INTRO_MUSIC_INDEX].resourceInPool && status == SUCCES_UPLOAD){
+                playIntroMusic()
+            }
+            soundsReady++
+            if (soundsReady == sounds.size){
+                progressIndicator.dismissProgress()
+                allSoundLoaded = true
+            }
+        }
     }
+
+    fun areSoundsReady() = allSoundLoaded
 
     fun playIntroMusic() {
         sounds[INTRO_MUSIC_INDEX].startOrResume(isLooping = false)
